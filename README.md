@@ -2,6 +2,18 @@
 
 A floating Mac gear shifter for the real Codex terminal CLI. Your prompts, responses, tool output, and approvals stay in your terminal.
 
+![Codex Shifter dashboard waiting for a terminal session](docs/images/dashboard.png)
+
+## Quick start
+
+On an Apple Silicon Mac with Xcode Command Line Tools and the Codex CLI installed, run these commands from the cloned repository.
+
+```sh
+./build.sh
+./install.sh
+~/.local/bin/codex-shifter
+```
+
 ## Launch
 
 ```sh
@@ -13,6 +25,10 @@ codex-shifter resume SESSION_ID
 ```
 
 The command is installed at `~/.local/bin/codex-shifter`. If your terminal does not include that directory in PATH, use that full path. The ordinary `codex` command is unchanged.
+
+## Dashboard controls
+
+![Gear selector and effort lever](docs/images/gear-selector.png)
 
 - Drag the knob or click gears 1–5 to change the attached CLI's model.
 - Move the effort lever to change reasoning effort.
