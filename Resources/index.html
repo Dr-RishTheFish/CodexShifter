@@ -1,0 +1,195 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width,initial-scale=1" />
+    <meta
+      http-equiv="Content-Security-Policy"
+      content="default-src 'self'; script-src 'self'; style-src 'self' 'unsafe-inline'; img-src 'self' data:; connect-src 'none'"
+    />
+    <title>Codex Shifter</title>
+    <link rel="stylesheet" href="style.css" />
+  </head>
+  <body>
+    <main>
+      <section class="dashboard">
+        <header>
+          <div class="brand">
+            <i>///</i> CODEX <b>SHIFTER</b
+            ><small>MANUAL MODEL TRANSMISSION</small>
+          </div>
+          <button
+            id="pin"
+            class="icon"
+            title="Keep window on top"
+            aria-label="Keep window on top"
+          >
+            ◇
+          </button>
+        </header>
+        <div class="terminal-picker">
+          <select id="terminals" aria-label="Terminal session">
+            <option>Run codex-shifter in Terminal</option></select
+          ><select id="threads" aria-label="Codex thread">
+            <option>Waiting for your CLI</option>
+          </select>
+        </div>
+        <div class="instrument">
+          <div class="tach">
+            <svg viewBox="0 0 200 132" aria-label="Output tokens per minute">
+              <defs>
+                <linearGradient id="arc">
+                  <stop stop-color="#68776f" />
+                  <stop offset=".68" stop-color="#d6caa1" />
+                  <stop offset="1" stop-color="#ff6047" />
+                </linearGradient>
+              </defs>
+              <path
+                d="M22 108 A82 82 0 1 1 178 108"
+                fill="none"
+                stroke="#252a2c"
+                stroke-width="11"
+              />
+              <path
+                d="M22 108 A82 82 0 1 1 178 108"
+                fill="none"
+                stroke="url(#arc)"
+                stroke-width="3"
+              />
+              <g id="ticks"></g>
+              <g id="needle">
+                <path d="M100 100 L25 108" stroke="#ffb854" stroke-width="2" />
+                <circle
+                  cx="100"
+                  cy="100"
+                  r="6"
+                  fill="#1c2225"
+                  stroke="#a3aaa9"
+                />
+              </g>
+              <text x="100" y="55" text-anchor="middle" class="dialtext">
+                OUTPUT / MIN
+              </text>
+              <text x="100" y="78" text-anchor="middle" id="rpm">—</text></svg
+            ><span>LIVE TELEMETRY</span>
+          </div>
+          <div class="gear-display">
+            <div class="small-label">SELECTED GEAR</div>
+            <strong id="gear">N</strong><span id="transmission">NEUTRAL</span>
+            <div id="ready">CONNECTING</div>
+          </div>
+        </div>
+        <div class="model-display">
+          <span class="small-label">NEXT PROMPT</span
+          ><strong id="model">Discovering models…</strong
+          ><span id="active">Waiting for Codex</span>
+        </div>
+        <div class="lamps">
+          <span id="linkLamp"><i></i>LINK</span
+          ><span id="busyLamp"><i></i>RUNNING</span
+          ><span id="queueLamp"><i></i>QUEUED</span
+          ><span id="lockLamp"><i></i>LOCK</span>
+        </div>
+        <div class="mechanism">
+          <div class="gate-wrap">
+            <div class="gate" id="gate" aria-label="Six position gear shifter">
+              <div class="plate">
+                <div class="groove left"></div>
+                <div class="groove center"></div>
+                <div class="groove right"></div>
+                <div class="crossbar"></div>
+              </div>
+              <button class="gear-button g1" data-gear="1">
+                <b>1</b><span>—</span></button
+              ><button class="gear-button g3" data-gear="3">
+                <b>3</b><span>—</span></button
+              ><button class="gear-button g5" data-gear="5">
+                <b>5</b><span>—</span>
+              </button>
+              <button class="gear-button g2" data-gear="2">
+                <b>2</b><span>—</span></button
+              ><button class="gear-button g4" data-gear="4">
+                <b>4</b><span>—</span></button
+              ><button class="gear-button gr" data-gear="R">
+                <b>R</b><span>DEFAULT</span>
+              </button>
+              <button
+                id="knob"
+                aria-label="Drag gear shift"
+                title="Drag through the gate, or click a gear"
+              >
+                <svg viewBox="0 0 50 50">
+                  <path d="M13 13v24m12-24v24m12-24v24M13 25h24" />
+                  <text x="12" y="10">1</text>
+                  <text x="24" y="10">3</text>
+                  <text x="36" y="10">5</text>
+                  <text x="12" y="46">2</text>
+                  <text x="24" y="46">4</text>
+                  <text x="36" y="46">R</text>
+                </svg>
+              </button>
+            </div>
+            <span class="engraving">DRAG TO SHIFT · 1–5 / R / N</span>
+          </div>
+          <div class="effort">
+            <label for="effort">EFFORT</label>
+            <div class="lever-track"></div>
+            <input
+              id="effort"
+              type="range"
+              min="0"
+              max="5"
+              value="2"
+              orient="vertical"
+              aria-label="Reasoning effort"
+            /><strong id="effortValue">—</strong>
+          </div>
+        </div>
+        <div class="pedals">
+          <button
+            id="clutch"
+            title="Lock the shifter against accidental changes"
+          >
+            <span class="pedal-lines">▥</span><b>CLUTCH</b
+            ><small>SHIFT LOCK</small>
+          </button>
+          <div class="mileage">
+            <span class="small-label">TOTAL TOKENS</span
+            ><strong id="total">— — — — — —</strong>
+            <div class="fuel">
+              <span>CONTEXT</span>
+              <div><i id="fuelBar"></i></div>
+              <b id="fuel">—</b>
+            </div>
+          </div>
+        </div>
+        <footer>
+          <button id="settings">⚙ SETUP</button
+          ><button id="sound" title="Toggle shift sounds">SOUND OFF</button
+          ><button id="refresh">REFRESH ↻</button>
+        </footer>
+        <div id="status" role="status">Starting Codex…</div>
+      </section>
+    </main>
+    <dialog id="setup">
+      <div class="dialog-title">
+        <h2>Tune your gearbox</h2>
+        <button id="closeSettings" aria-label="Close settings">✕</button>
+      </div>
+      <p>
+        Assign a model from your live Codex catalog to each gear. R returns to
+        the catalog default.
+      </p>
+      <div id="mappings"></div>
+      <div class="setup-note">
+        Clutch locks gear selection. Switching models may affect prompt-cache
+        reuse; the app does not promise cache preservation.
+      </div>
+      <button id="reconnect">Reconnect terminal</button
+      ><small id="cliPath"></small>
+    </dialog>
+    <script src="core.js"></script>
+    <script src="sounds.js"></script>
+    <script src="app.js"></script>
+  </body>
+</html>

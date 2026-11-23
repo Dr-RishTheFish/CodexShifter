@@ -1,0 +1,62 @@
+#!/usr/bin/python3
+"""Launch the real Codex TUI with a floating model-shifter companion."""
+import json,os,shutil,signal,subprocess,sys,tempfile,time,uuid
+from pathlib import Path
+
+def main():
+    args=sys.argv[1:]
+    if args==['--help']:
+        print('Usage: codex-shifter [Codex CLI arguments]\n       codex-shifter resume SESSION_ID\n\nRuns Codex in this terminal and opens its floating gear shifter.\nExamples: codex-shifter -C ~/project\n          codex-shifter --model gpt-6.1-terra\nThe regular codex command remains unchanged.');return 0
+    if any(a=='--no-daemon' or a=='--remote' or a.startswith('--remote=') for a in args):
+        print('codex-shifter manages its own local connection; omit --remote and --no-daemon.',file=sys.stderr);return 2
+    if not sys.stdin.isatty():print('Run codex-shifter in an interactive terminal.',file=sys.stderr);return 2
+    cli=os.environ.get('CODEX_SHIFTER_CLI') or shutil.which('codex')
+    if not cli:print('Codex CLI is not on PATH.',file=sys.stderr);return 1
+    source=Path(__file__).resolve().parents[1]
+    app=source.parent/'Codex Shifter.app'
+    if not app.exists():print('Build Codex Shifter first: '+str(source/'build.sh'),file=sys.stderr);return 1
+    registry=Path.home()/'Library/Application Support/CodexShifter/sessions';registry.mkdir(parents=True,exist_ok=True);registry.chmod(0o700)
+    temp=Path(tempfile.mkdtemp(prefix='codex-shifter-',dir='/tmp'));socket_path=temp/'rpc.sock'
+    key=str(uuid.uuid4());record=registry/(key+'.json');server=None;child=None
+    working_dir=Path.cwd()
+    for i,a in enumerate(args):
+        if a in ('-C','--cd') and i+1<len(args):working_dir=Path(args[i+1]).expanduser().resolve()
+        elif a.startswith('--cd='):working_dir=Path(a.split('=',1)[1]).expanduser().resolve()
+    config=[]
+    for i,a in enumerate(args):
+        if a in ('-c','--config','--enable','--disable','--profile','-p') and i+1<len(args):config.extend([a,args[i+1]])
+        elif a.startswith(('--config=','--enable=','--disable=')):config.append(a)
+    # Profiles are a TUI option; the TUI forwards its effective settings to the server.
+    server_config=[];i=0
+    while i<len(config):
+        if config[i] in ('--profile','-p'):i+=2;continue
+        server_config.append(config[i]);i+=1
+    env=os.environ.copy()
+    def interrupted(signum,frame):raise SystemExit(128+signum)
+    signal.signal(signal.SIGTERM,interrupted)
+    signal.signal(signal.SIGHUP,interrupted)
+    try:
+        with open(temp/'server.log','wb') as log:
+            server=subprocess.Popen([cli,'app-server',*server_config,'--listen','unix://'+str(socket_path)],stdin=subprocess.DEVNULL,stdout=log,stderr=log,start_new_session=True)
+        deadline=time.monotonic()+20
+        while not socket_path.exists():
+            if server.poll() is not None:raise RuntimeError('Codex server failed. '+(temp/'server.log').read_text()[-1500:])
+            if time.monotonic()>deadline:raise RuntimeError('Codex local server did not start')
+            time.sleep(.05)
+        payload={'id':key,'socket':str(socket_path),'pid':os.getpid(),'serverPid':server.pid,'cwd':str(working_dir),'started':time.time()}
+        fd=os.open(record,os.O_WRONLY|os.O_CREAT|os.O_EXCL,0o600)
+        with os.fdopen(fd,'w') as f:json.dump(payload,f)
+        subprocess.run(['open','-g',str(app)],check=True)
+        child=subprocess.Popen([cli,'--remote','unix://'+str(socket_path),*args],env=env)
+        # The terminal foreground process group delivers Ctrl-C directly to Codex.
+        signal.signal(signal.SIGINT,signal.SIG_IGN)
+        return child.wait()
+    except Exception as e:print('Codex Shifter: '+str(e),file=sys.stderr);return 1
+    finally:
+        if child and child.poll() is None:child.terminate();child.wait()
+        if server and server.poll() is None:
+            server.terminate()
+            try:server.wait(timeout=5)
+            except subprocess.TimeoutExpired:server.kill();server.wait()
+        record.unlink(missing_ok=True);shutil.rmtree(temp,ignore_errors=True)
+if __name__=='__main__':sys.exit(main())
