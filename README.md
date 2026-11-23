@@ -2,7 +2,7 @@
 
 A floating Mac gear shifter for the real Codex terminal CLI. Your prompts, responses, tool output, and approvals stay in your terminal.
 
-![Codex Shifter dashboard waiting for a terminal session](docs/images/dashboard.png)
+![Codex Shifter in second gear alongside its active Codex terminal session](docs/images/dashboard.png)
 
 ## Quick start
 
